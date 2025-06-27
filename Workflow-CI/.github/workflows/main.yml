@@ -1,3 +1,5 @@
+# File: .github/workflows/main.yml
+
 name: Run MLflow Model CI
 
 on:
@@ -30,16 +32,16 @@ jobs:
         run: |
           echo "Current working directory: $(pwd)"
           ls -F
-          
+
           cd Workflow-CI 
-          
+
           echo "Changed directory to Workflow-CI: $(pwd)"
           ls -F
-          
+
           cd MLProject
-          
+
           echo "Changed directory to MLProject: $(pwd)"
           ls -F
-          
+
           # HANYA INI YANG DIJALANKAN
           mlflow run . # Tidak ada --no-conda
