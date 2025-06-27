@@ -30,7 +30,7 @@ jobs:
         # Ketika langkah ini dimulai, working directory adalah root repositori (Eksperimen_SML_SRI-REJEKI/).
         # Kita perlu masuk ke 'Workflow-CI/' terlebih dahulu, lalu baru masuk ke 'MLProject/' di dalamnya.
         run: |
-          # BARIS-BARIS INI AKAN DIJALANKAN SECARA BERURUTAN
+          # BARIS-BARIS INI AKAN DIJALANKAN SECARA BERUTUTAN
           # Ini adalah langkah-langkah debugging, bisa dihapus setelah berhasil
           echo "Current working directory (should be root of repo): $(pwd)"
           ls -F
