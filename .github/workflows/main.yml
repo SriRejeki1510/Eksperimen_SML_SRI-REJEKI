@@ -8,6 +8,7 @@ on:
 jobs:
   run-model:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -15,12 +16,15 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install mlflow pandas scikit-learn
 
-      - name: Run model script
+      - name: Run MLflow Project
         run: |
-          python modelling.py
+          cd MLProject
+          mlflow run . --no-conda
