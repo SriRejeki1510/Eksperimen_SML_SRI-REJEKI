@@ -20,9 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt || true
-          pip install mlflow pandas scikit-learn
+          pip install mlflow scikit-learn pandas
 
       - name: Run MLflow Project
         run: |

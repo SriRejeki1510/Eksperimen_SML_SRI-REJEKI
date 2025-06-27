@@ -1,4 +1,4 @@
-name: wine_quality_sri_rejeki
+name: Wine_Quality_Model
 
 conda_env: conda.yaml
 
