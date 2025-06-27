@@ -1,31 +1,49 @@
-
-# trigger workflow run
-name: Run MLflow Model
+name: Run MLflow Model CI
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main # Trigger saat ada push ke branch 'main'
+  workflow_dispatch: # Memungkinkan eksekusi manual dari GitHub UI
 
 jobs:
-  run-model:
+  run-mlflow-project:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+          # Cache pip dependencies untuk mempercepat instalasi di run berikutnya
+          cache: 'pip' # Mengaktifkan caching untuk dependensi pip
 
       - name: Install dependencies
         run: |
+          # Menginstal pip dependencies yang diperlukan untuk menjalankan MLflow Project
+          # Pastikan semua dependensi yang dibutuhkan oleh modelling.py (seperti scikit-learn, pandas, dll.)
+          # dan juga mlflow itu sendiri, tercantum di sini.
           pip install mlflow scikit-learn pandas
 
-      - name: Run MLflow Project
+      - name: Navigate to MLflow Project directory and Run
+        # Ketika job ini dimulai, working directory adalah root repositori (yaitu, 'Workflow-CI').
+        # Kita perlu masuk ke sub-direktori 'MLProject' untuk menjalankan 'mlflow run .'.
         run: |
-            cd Workflow-CI
+          echo "Current working directory before navigation: $(pwd)"
+          echo "Listing contents of current directory (should be root of 'Workflow-CI'):"
+          ls -F
+          
+          # Pindah ke direktori MLflow Project
+          cd MLProject 
+          
+          echo "Changed directory to: $(pwd)"
+          echo "Listing contents of MLflow Project directory:"
+          ls -F
+          
+          # Menjalankan MLflow Project.
+          # '.' berarti menjalankan proyek dari direktori saat ini (yaitu, 'MLProject/').
+          # '--no-conda' digunakan karena kita sudah menginstal dependensi dengan 'pip install' sebelumnya.
           mlflow run . --no-conda
