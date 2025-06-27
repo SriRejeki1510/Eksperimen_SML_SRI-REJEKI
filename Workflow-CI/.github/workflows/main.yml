@@ -1,0 +1,45 @@
+name: Run MLflow Model CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  run-mlflow-project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          # Tidak perlu cache pip karena Conda yang akan mengelola
+          # cache: 'pip' 
+
+      # -- Hapus langkah ini karena MLflow akan menggunakan conda.yaml --
+      # - name: Install dependencies
+      #   run: |
+      #     pip install mlflow scikit-learn pandas
+
+      - name: Navigate to MLflow Project directory and Run
+        run: |
+          echo "Current working directory: $(pwd)"
+          ls -F
+          
+          cd Workflow-CI 
+          
+          echo "Changed directory to Workflow-CI: $(pwd)"
+          ls -F
+          
+          cd MLProject
+          
+          echo "Changed directory to MLProject: $(pwd)"
+          ls -F
+          
+          # HANYA INI YANG DIJALANKAN
+          mlflow run . # Tidak ada --no-conda
