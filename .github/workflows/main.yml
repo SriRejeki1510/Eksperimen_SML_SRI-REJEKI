@@ -1,4 +1,4 @@
-name: Run MLflow Model
+name: Retrain Workflow (Basic)
 
 on:
   push:
@@ -7,23 +7,37 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-model:
+  retrain:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Install dependencies
         run: |
-          pip install mlflow scikit-learn pandas
+          python -m pip install --upgrade pip
+          pip install pandas scikit-learn mlflow
 
-      - name: Run MLflow Project
+      - name: Debug Folder Structure
         run: |
-          cd Workflow-CI
+          pwd
+          ls -la
+          cd MLProject
+          ls -la
+          if [ -f "modelling.py" ] && [ -f "MLproject" ]; then
+            echo "All required files found!"
+          else
+            echo "Missing MLproject or modelling.py!"
+            exit 1
+          fi
+
+      - name: Run MLflow project
+        run: |
+          cd MLProject
           mlflow run .
