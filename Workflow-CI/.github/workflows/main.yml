@@ -1,3 +1,5 @@
+# File: .github/workflows/main.yml
+
 name: Run MLflow Model CI
 
 on:
@@ -25,14 +27,15 @@ jobs:
           pip install mlflow scikit-learn pandas
 
       - name: Navigate to MLflow Project directory and Run
-        # KARENA ROOT REPO ADALAH 'Eksperimen_SML_SRI-REJEKI/',
-        # kita perlu masuk ke 'Workflow-CI/' terlebih dahulu,
-        # lalu baru masuk ke 'MLProject/' di dalamnya.
+        # Ketika langkah ini dimulai, working directory adalah root repositori (Eksperimen_SML_SRI-REJEKI/).
+        # Kita perlu masuk ke 'Workflow-CI/' terlebih dahulu, lalu baru masuk ke 'MLProject/' di dalamnya.
         run: |
+          # BARIS-BARIS INI AKAN DIJALANKAN SECARA BERURUTAN
+          # Ini adalah langkah-langkah debugging, bisa dihapus setelah berhasil
           echo "Current working directory (should be root of repo): $(pwd)"
           ls -F
           
-          # Pindah ke folder Workflow-CI terlebih dahulu
+          # Pindah ke folder Workflow-CI
           cd Workflow-CI 
           
           echo "Changed directory to Workflow-CI: $(pwd)"
