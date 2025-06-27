@@ -1,43 +1,48 @@
-# File: .github/workflows/main.yml
-
 name: Run MLflow Model CI
 
 on:
-  # Trigger workflow saat ada push ke branch 'main'
   push:
     branches:
       - main
-  # Memungkinkan untuk menjalankan workflow ini secara manual dari tab 'Actions' di GitHub
   workflow_dispatch:
 
 jobs:
   run-mlflow-project:
-    runs-on: ubuntu-latest # Jalankan job di lingkungan Ubuntu terbaru yang disediakan GitHub
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository # Langkah pertama: Mengambil kode dari repositori
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.9 # Langkah kedua: Mengatur versi Python
+      - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          cache: 'pip' # Mengaktifkan caching untuk dependensi pip agar instalasi lebih cepat
+          cache: 'pip'
 
-      - name: Install dependencies # Langkah ketiga: Menginstal pustaka yang diperlukan
+      - name: Install dependencies
         run: |
-          # Pastikan semua pustaka yang digunakan oleh 'modelling.py' dan juga 'mlflow' itu sendiri ada di sini.
-          # Jika Anda memiliki dependensi lain (misalnya numpy, matplotlib, dll.), tambahkan di baris ini.
           pip install mlflow scikit-learn pandas
 
-      - name: Navigate to MLflow Project directory and Run # Langkah keempat: Menjalankan MLflow Project
-        # Ketika langkah ini dimulai, working directory adalah root repositori (yaitu 'Workflow-CI').
-        # Kita perlu masuk ke sub-direktori 'MLProject' untuk menjalankan 'mlflow run .'.
+      - name: Navigate to MLflow Project directory and Run
+        # KARENA ROOT REPO ADALAH 'Eksperimen_SML_SRI-REJEKI/',
+        # kita perlu masuk ke 'Workflow-CI/' terlebih dahulu,
+        # lalu baru masuk ke 'MLProject/' di dalamnya.
         run: |
-          # Perintah ini akan mengubah working directory dari 'Workflow-CI' menjadi 'Workflow-CI/MLProject'
-          cd MLProject 
-        
-          # Menjalankan MLflow Project.
-          # '.' berarti menjalankan proyek dari direktori saat ini (yaitu, 'MLProject/').
-          # '--no-conda' digunakan karena kita sudah menginstal dependensi dengan 'pip install' di langkah sebelumnya.
+          echo "Current working directory (should be root of repo): $(pwd)"
+          ls -F
+          
+          # Pindah ke folder Workflow-CI terlebih dahulu
+          cd Workflow-CI 
+          
+          echo "Changed directory to Workflow-CI: $(pwd)"
+          ls -F
+          
+          # Lalu pindah ke folder MLProject di dalamnya
+          cd MLProject
+          
+          echo "Changed directory to MLProject: $(pwd)"
+          ls -F
+          
+          # Sekarang jalankan MLflow Project
           mlflow run . --no-conda
