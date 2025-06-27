@@ -1,47 +1,57 @@
-# File: .github/workflows/main.yml
-
 name: Run MLflow Model CI
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Memungkinkan pemicuan manual dari GitHub UI
 
 jobs:
   run-mlflow-project:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Lingkungan eksekusi
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # Ambil kode dari repo
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          # Tidak perlu cache pip karena Conda yang akan mengelola
-          # cache: 'pip' 
+          # Caching untuk pip. Mungkin tidak terlalu esensial jika Conda yang mengatur,
+          # tapi tidak ada salahnya jika ada dependensi pip lain.
+          cache: 'pip' 
 
-      # -- Hapus langkah ini karena MLflow akan menggunakan conda.yaml --
-      # - name: Install dependencies
-      #   run: |
-      #     pip install mlflow scikit-learn pandas
+      # Menginstal MLflow dan dependensi dasar yang TIDAK diatur oleh conda.yaml
+      # Jika modelling.py Anda membutuhkan scikit-learn, pandas, dll. dan tidak ingin sepenuhnya
+      # bergantung pada Conda untuk ini, maka langkah ini tetap penting.
+      - name: Install core dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mlflow scikit-learn pandas
 
       - name: Navigate to MLflow Project directory and Run
+        # Ingat, root repo adalah 'Eksperimen_SML_SRI-REJEKI/'.
+        # Kita perlu masuk ke 'Workflow-CI/' terlebih dahulu, lalu baru ke 'MLProject/'.
         run: |
           echo "Current working directory: $(pwd)"
-          ls -F
-
+          ls -F # Melihat isi root repo
+          
           cd Workflow-CI 
-
+          
           echo "Changed directory to Workflow-CI: $(pwd)"
-          ls -F
-
+          ls -F # Melihat isi Workflow-CI
+          
           cd MLProject
-
+          
           echo "Changed directory to MLProject: $(pwd)"
-          ls -F
-
-          # HANYA INI YANG DIJALANKAN
-          mlflow run . # Tidak ada --no-conda
+          ls -F # Melihat isi MLProject
+          
+          # Menjalankan MLflow Project.
+          # '.' berarti menjalankan proyek dari direktori saat ini (yaitu, MLProject/).
+          # Jika MLProject Anda memiliki entry point default bernama 'main' dan tidak butuh parameter
+          # maka 'mlflow run .' sudah cukup.
+          # Jika Anda punya entry point lain (misal 'train'), gunakan 'mlflow run . -e train'
+          # Kita gunakan 'mlflow run .' tanpa --no-conda atau --env-manager=local
+          # agar MLflow mencoba mengelola lingkungan (misal dengan conda.yaml)
+          mlflow run .
