@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/LENOVO/Downloads/Eksperimen_SML_SRI-REJEKI/Workflow-CI/MLProject/mlruns/0/2debe41de4d54b5ab54dea816785bd3d/artifacts
+end_time: 1751214010475
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2debe41de4d54b5ab54dea816785bd3d
+run_name: puzzled-crow-725
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751214007170
+status: 3
+tags: []
+user_id: runner

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/LENOVO/Downloads/Eksperimen_SML_SRI-REJEKI/Workflow-CI/MLProject/mlruns/576031200571984444/444106bbc438454fadd18359c774b4fe/artifacts
+end_time: 1751214010278
+entry_point_name: ''
+experiment_id: '576031200571984444'
+lifecycle_stage: active
+run_id: 444106bbc438454fadd18359c774b4fe
+run_name: sedate-shad-951
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751214010267
+status: 3
+tags: []
+user_id: runner
