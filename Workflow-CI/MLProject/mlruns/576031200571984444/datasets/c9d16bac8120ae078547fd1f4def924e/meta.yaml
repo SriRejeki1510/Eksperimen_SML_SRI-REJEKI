@@ -1,0 +1,15 @@
+digest: b4260345
+name: dataset
+profile: '{"num_rows": 1571, "num_elements": 17281}'
+schema: '{"mlflow_colspec": [{"type": "double", "name": "fixed acidity", "required":
+  true}, {"type": "double", "name": "volatile acidity", "required": true}, {"type":
+  "double", "name": "citric acid", "required": true}, {"type": "double", "name": "residual
+  sugar", "required": true}, {"type": "double", "name": "chlorides", "required": true},
+  {"type": "double", "name": "free sulfur dioxide", "required": true}, {"type": "double",
+  "name": "total sulfur dioxide", "required": true}, {"type": "double", "name": "density",
+  "required": true}, {"type": "double", "name": "pH", "required": true}, {"type":
+  "double", "name": "sulphates", "required": true}, {"type": "double", "name": "alcohol",
+  "required": true}]}'
+source: '{"tags": {"mlflow.user": "LENOVO", "mlflow.source.name": "modelling.py",
+  "mlflow.source.type": "LOCAL", "mlflow.source.git.commit": "d44a790debe04a39b6a231a7bc3b0677a4fad718"}}'
+source_type: code
