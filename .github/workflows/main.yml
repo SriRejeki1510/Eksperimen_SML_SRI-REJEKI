@@ -30,11 +30,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas scikit-learn mlflow numpy # Pastikan semua dependensi yang dibutuhkan modelling.py ada di sini
 
-      - name: Verify MLflow Project Directory and Run
+      - name: Run MLflow Project and Generate Artifacts # Nama langkah diganti agar lebih jelas
         shell: bash
         run: |
           set -x
 
+          # Pindah ke direktori proyek MLflow Anda
           cd Workflow-CI/MLProject/
 
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
@@ -46,23 +47,21 @@ jobs:
           echo "Removed. Now trying to re-download the clean version from GitHub raw."
 
           RAW_CSV_URL="https://raw.githubusercontent.com/SriRejeki1510/Eksperimen_SML_SRI-REJEKI/main/Workflow-CI/MLProject/wine_quality_preprocessing/wine_quality_preprocessed.csv"
-
+          
           mkdir -p wine_quality_preprocessing/
 
           echo "Downloading clean CSV from $RAW_CSV_URL..."
           wget -q $RAW_CSV_URL -O wine_quality_preprocessing/wine_quality_preprocessed.csv
-
+          
           ls -lh wine_quality_preprocessing/wine_quality_preprocessed.csv
 
           # Debugging krusial untuk VERIFIKASI ISI FILE DI RUNTIME ACTIONS!
           echo "Verifying content of wine_quality_preprocessed.csv at line 1360-1365 (after re-download):"
           sed -n '1360,1365p' wine_quality_preprocessing/wine_quality_preprocessed.csv || true
-
+          
           echo "--- Content with visible whitespace characters ---"
           cat -vte wine_quality_preprocessing/wine_quality_preprocessed.csv | sed -n '1360,1365p' || true
           echo "--- End of visible whitespace verification ---"
-
-          # >>>>>> PASTIKAN TIDAK ADA LAGI SCRIPT PYTHON DEBUGGING DI SINI <<<<<<
 
           # Verifikasi MLproject dan conda.yaml ada
           if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
@@ -77,6 +76,30 @@ jobs:
             exit 1
           fi
 
-          export MLFLOW_TRACKING_URI=./mlruns
+          export MLFLOW_TRACKING_URI=./mlruns # Ini akan membuat mlruns di root repositori
 
           mlflow run . --env-manager=local
+
+    # >>> TAMBAHKAN KEMBALI BLOK KODE INI SEBAGAI LANGKAH TERPISAH <<<
+    - name: Commit MLflow artifacts to GitHub
+      # working-directory di sini adalah root repositori agar git add bisa melacak mlruns
+      working-directory: './' 
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+        # Tambahkan folder mlruns. Gunakan -f (force) jika ada di .gitignore
+        # Karena MLflow membuat mlruns di root repo
+        git add -f mlruns/ 
+
+        # Commit perubahan hanya jika ada perubahan pada mlruns
+        # `|| true` akan memastikan langkah ini tidak gagal jika tidak ada perubahan baru
+        git commit -m "Add MLflow artifacts from workflow run" || true 
+
+        # Set URL remote dengan token untuk otentikasi
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        
+        # Push perubahan ke branch main
+        git push origin main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
