@@ -1,4 +1,4 @@
-
+# File: .github/workflows/main.yml
 
 name: Run MLflow Model CI
 
@@ -13,14 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history to avoid cache issues)
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ini akan mengambil seluruh riwayat, memaksa checkout baru
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          cache: 'pip'
+          cache: 'pip' # Biarkan cache pip, ini tidak terkait dengan masalah CSV
 
       - name: Install MLflow CLI
         run: |
@@ -50,10 +52,17 @@ jobs:
           # Navigasi ke direktori proyek MLflow Anda
           cd Workflow-CI/MLProject/
 
-          # Debugging logs - sekarang Path sudah relatif dari working-directory ini
+          # Debugging logs
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
           ls -F
           echo "---"
+
+          # Ini adalah langkah debugging krusial untuk VERIFIKASI ISI FILE DI RUNTIME ACTIONS!
+          echo "Verifying content of wine_quality_preprocessed.csv at line 1363:"
+          # Tampilkan baris 1360-1365 dari file CSV
+          sed -n '1360,1365p' wine_quality_preprocessing/wine_quality_preprocessed.csv || true
+          echo "--- End of verification ---"
+
 
           # Verifikasi MLproject dan conda.yaml ada
           if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
@@ -68,8 +77,6 @@ jobs:
             exit 1
           fi
 
-          # BARIS KRITIS YANG HARUS ADA DI SINI SEBELUM mlflow run
-          export MLFLOW_TRACKING_URI=./mlruns # Atau bisa juga file://./mlruns
+          export MLFLOW_TRACKING_URI=./mlruns
 
-          # Jalankan MLflow project
           mlflow run .
