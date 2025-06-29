@@ -27,36 +27,42 @@ jobs:
           python -m pip install --upgrade pip
           pip install mlflow
 
-      # Perubahan Utama di sini: Gunakan cara inisialisasi conda yang lebih robust
-      - name: Install Miniconda and Initialize Shell
+      # Perubahan KRITIS di sini: Gabungkan inisialisasi Conda dan jalankan MLflow
+      # Gunakan langkah tunggal untuk memastikan Conda environment diinisialisasi
+      # sebelum mlflow run mencoba mengaktifkannya.
+      - name: Install Miniconda, Initialize Shell, and Run MLflow Project
+        # Penting: Gunakan shell: bash untuk memastikan kita di bash
+        shell: bash
         run: |
-          # Periksa apakah conda sudah ada
+          # 1. Install Miniconda jika belum ada
           if ! command -v conda &> /dev/null
           then
               echo "Conda not found, installing Miniconda..."
               wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
               bash miniconda.sh -b -p $HOME/miniconda
               rm miniconda.sh
-              # Ini penting: Inisialisasi conda untuk bash agar 'activate' dikenali
-              # Ini akan memodifikasi .bashrc atau .profile, tapi kita perlu memuatnya
-              $HOME/miniconda/bin/conda init bash
+              # Ini inisialisasi Conda untuk sesi bash ini.
+              # Perintah ini akan memodifikasi PATH untuk sesi ini.
+              source $HOME/miniconda/etc/profile.d/conda.sh
+              echo "Conda successfully installed and initialized."
           else
               echo "Conda is already installed."
+              # Meskipun sudah ada, pastikan inisialisasi untuk sesi ini
+              source $(conda info --base)/etc/profile.d/conda.sh
           fi
-          # Perintah ini untuk memastikan conda base environment diupdate, izinkan gagal
-          conda update -n base -c defaults conda || true
-        # Penting: Gunakan shell: bash -l (login shell) untuk langkah-langkah berikutnya
-        # Ini akan memuat file inisialisasi seperti .bashrc atau .profile
-        shell: bash
 
-      # Ubah langkah Verify MLflow Project Directory and Run agar menggunakan shell yang diinisialisasi
-      - name: Verify MLflow Project Directory and Run
-        run: |
-          # Debugging logs sudah benar
+          # Opsional: Update Conda
+          conda update -n base -c defaults conda || true
+
+          # Navigasi ke direktori proyek MLflow Anda
+          cd Workflow-CI/MLProject/
+
+          # Debugging logs - sekarang Path sudah relatif dari working-directory ini
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
           ls -F
           echo "---"
 
+          # Verifikasi MLproject dan conda.yaml ada
           if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
             echo "MLproject and conda.yaml files found!"
             echo "--- MLproject content ---"
@@ -70,9 +76,5 @@ jobs:
           fi
 
           # Jalankan MLflow project
+          # Karena conda.sh sudah di-source, 'activate' akan dikenal oleh mlflow
           mlflow run .
-
-        working-directory: Workflow-CI/MLProject
-        # Penting: Gunakan shell: bash -l (login shell) di sini juga
-        # agar lingkungan conda bisa diaktifkan oleh mlflow run
-        shell: bash -l # "-l" untuk memastikan itu adalah login shell
