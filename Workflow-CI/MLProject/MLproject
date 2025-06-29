@@ -1,6 +1,4 @@
-name: Wine_Quality_Model
-
-conda_env: conda.yaml
+name: wine-quality
 
 entry_points:
   main:

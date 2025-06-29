@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # Berikan izin push ke repo
+  contents: write
 
 jobs:
   run-mlflow-project:
@@ -27,10 +27,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install mlflow scikit-learn pandas numpy
 
-      - name: Run MLflow project
+      - name: Run MLflow project (tanpa conda)
         working-directory: ./Workflow-CI/MLProject
         run: |
-          mlflow run .
+          mlflow run . --env-manager=local
 
       - name: Commit MLflow artifacts to GitHub
         if: success()
