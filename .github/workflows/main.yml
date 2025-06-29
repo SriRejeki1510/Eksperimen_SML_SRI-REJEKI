@@ -1,17 +1,14 @@
-# File: .github/workflows/main.yml
-
-name: Run MLflow Model CI
+name: Run MLflow Model CI 
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main 
+  workflow_dispatch: 
 
 jobs:
   run-mlflow-project:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -24,28 +21,35 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mlflow scikit-learn pandas
+          # Upgrade pip ke versi terbaru
+          python -m pip install --upgrade pip
+          # Instal semua paket yang diperlukan untuk proyek MLflow Anda
+          # Pastikan daftar ini mencakup semua yang terdaftar dalam file environment MLproject Anda
+          pip install mlflow scikit-learn pandas # Tambahkan dependensi spesifik lainnya di sini!
 
-      - name: Navigate to MLflow Project directory and Run
-        # Ketika langkah ini dimulai, working directory adalah root repositori (Eksperimen_SML_SRI-REJEKI/).
-        # Kita perlu masuk ke 'Workflow-CI/' terlebih dahulu, lalu baru masuk ke 'MLProject/' di dalamnya.
+      - name: Verify MLflow Project Directory and Run
         run: |
-          # BARIS-BARIS INI AKAN DIJALANKAN SECARA BERUTUTAN
-          # Ini adalah langkah-langkah debugging, bisa dihapus setelah berhasil
-          echo "Current working directory (should be root of repo): $(pwd)"
+          # Opsional: Debugging - tampilkan isi direktori saat ini (yang merupakan root repo)
+          echo "Listing contents of repository root (current working directory): $(pwd)"
           ls -F
+          echo "---"
           
-          # Pindah ke folder Workflow-CI
-          cd Workflow-CI 
+          # Opsional: Debugging - tampilkan isi direktori proyek MLflow yang diharapkan
+          echo "Listing contents of Workflow-CI/MLProject:"
+          ls -F Workflow-CI/MLProject
+          echo "---"
+
+          # Verifikasi apakah file MLproject ada sebelum mencoba menjalankannya
+          if [ -f "Workflow-CI/MLProject/MLproject" ]; then
+            echo "MLproject file found in Workflow-CI/MLProject!"
+            cat Workflow-CI/MLProject/MLproject # Tampilkan isi file untuk debugging
+          else
+            echo "Error: MLproject file not found in Workflow-CI/MLProject!"
+            exit 1 # Gagal workflow jika file tidak ditemukan
+          fi
           
-          echo "Changed directory to Workflow-CI: $(pwd)"
-          ls -F
-          
-          # Lalu pindah ke folder MLProject di dalamnya
-          cd MLProject
-          
-          echo "Changed directory to MLProject: $(pwd)"
-          ls -F
-          
-          # Sekarang jalankan MLflow Project
-          mlflow run . --no-conda
+          # Sekarang jalankan Proyek MLflow. Kunci 'working-directory' memastikan
+          # perintah 'mlflow run .' dieksekusi dari lokasi yang benar.
+          mlflow run . --no-conda # Gunakan --no-conda jika Anda mengelola dependensi langsung dengan pip
+        
+        working-directory: Workflow-CI/MLProject
