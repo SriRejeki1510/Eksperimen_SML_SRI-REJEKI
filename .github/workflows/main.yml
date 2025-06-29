@@ -5,7 +5,7 @@ name: Run MLflow Model CI
 on:
   push:
     branches:
-      - main # Sesuaikan dengan cabang Anda (main)
+      - main
   workflow_dispatch:
 
 jobs:
@@ -16,37 +16,31 @@ jobs:
       - name: Checkout repository (full history to avoid cache issues)
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Ambil seluruh riwayat
+          fetch-depth: 0
 
-      - name: Set up Python 3.9 # Gunakan Python 3.9 sesuai conda.yaml Anda
+      - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
-          cache: 'pip' # Caching pip tetap bermanfaat
+          cache: 'pip'
 
-      - name: Install all dependencies # Instal SEMUA dependensi proyek Anda dengan pip
+      - name: Install all dependencies
         run: |
-          set -x # Debugging
+          set -x
           python -m pip install --upgrade pip
-          # Pastikan semua library dari modelling.py dan conda.yaml Anda diinstal di sini
-          # (pandas, scikit-learn, mlflow, numpy, dll.)
-          pip install pandas scikit-learn mlflow numpy chardet # Tambahkan numpy jika modelling.py menggunakannya
+          pip install pandas scikit-learn mlflow numpy # Pastikan semua dependensi yang dibutuhkan modelling.py ada di sini
 
-      # Langkah ini diganti dengan pendekatan sederhana, mirip teman Anda
       - name: Verify MLflow Project Directory and Run
         shell: bash
         run: |
-          set -x # Debugging
+          set -x
 
-          # Navigasi ke direktori proyek MLflow Anda
           cd Workflow-CI/MLProject/
 
-          # Debugging logs
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
           ls -F
           echo "---"
 
-          # Hapus dan download ulang CSV untuk memastikan bersih (tetap kita pakai)
           echo "Attempting to remove potentially cached/corrupted CSV file in runner..."
           rm -f wine_quality_preprocessing/wine_quality_preprocessed.csv || true
           echo "Removed. Now trying to re-download the clean version from GitHub raw."
@@ -68,5 +62,21 @@ jobs:
           cat -vte wine_quality_preprocessing/wine_quality_preprocessed.csv | sed -n '1360,1365p' || true
           echo "--- End of visible whitespace verification ---"
 
-          # Tambahkan debugging langsung dari Python untuk Pandas
-          python -c "
+          # >>>>>> PASTIKAN TIDAK ADA LAGI SCRIPT PYTHON DEBUGGING DI SINI <<<<<<
+
+          # Verifikasi MLproject dan conda.yaml ada
+          if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
+            echo "MLproject and conda.yaml files found!"
+            echo "--- MLproject content ---"
+            cat MLproject
+            echo "--- conda.yaml content ---"
+            cat conda.yaml
+            echo "---"
+          else
+            echo "Error: MLproject or conda.yaml file not found in the current directory!"
+            exit 1
+          fi
+
+          export MLFLOW_TRACKING_URI=./mlruns
+
+          mlflow run . --env-manager=local
