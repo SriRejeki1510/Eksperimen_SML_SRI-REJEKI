@@ -2,16 +2,18 @@ name: Run MLflow Model CI
 
 on:
   push:
-    branches: [main]
-    paths-ignore:        
-      - 'mlruns/**'
+    branches:
+      - main
+    paths-ignore:
+      - 'Workflow-CI/MLProject/mlruns/**'  # Hindari trigger loop saat push artefak
   workflow_dispatch:
 
 jobs:
   run-mlflow-project:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history to avoid cache issues)
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -22,27 +24,79 @@ jobs:
           python-version: "3.9"
           cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install all dependencies
         run: |
+          set -x
+          python -m pip install --upgrade pip
           pip install pandas scikit-learn mlflow numpy
+
+      - name: Prepare MLflow Project directory and data
+        shell: bash
+        run: |
+          set -x
+          cd Workflow-CI/MLProject/
+
+          echo "Removing potentially corrupted CSV file..."
+          rm -f wine_quality_preprocessing/wine_quality_preprocessed.csv || true
+
+          RAW_CSV_URL="https://raw.githubusercontent.com/SriRejeki1510/Eksperimen_SML_SRI-REJEKI/main/Workflow-CI/MLProject/wine_quality_preprocessing/wine_quality_preprocessed.csv"
+          mkdir -p wine_quality_preprocessing/
+
+          echo "Downloading clean CSV from $RAW_CSV_URL..."
+          wget -q $RAW_CSV_URL -O wine_quality_preprocessing/wine_quality_preprocessed.csv
+
+          ls -lh wine_quality_preprocessing/wine_quality_preprocessed.csv
+
+          echo "Verifying CSV content (lines 1360-1365):"
+          sed -n '1360,1365p' wine_quality_preprocessing/wine_quality_preprocessed.csv || true
+
+          echo "--- Visible whitespace ---"
+          cat -vte wine_quality_preprocessing/wine_quality_preprocessed.csv | sed -n '1360,1365p' || true
+
+          # Check MLproject and conda.yaml presence
+          if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
+            echo "MLproject and conda.yaml found."
+          else
+            echo "Error: MLproject or conda.yaml not found!"
+            exit 1
+          fi
 
       - name: Run MLflow Project
         shell: bash
         run: |
           cd Workflow-CI/MLProject/
-          # ... (logika download & run MLflow)
+          export MLFLOW_TRACKING_URI=./mlruns
+          mlflow run . --env-manager=local
+
+      - name: Verify mlruns folder existence
+        shell: bash
+        run: |
+          cd Workflow-CI/MLProject/
+          if [ -d "mlruns" ]; then
+            echo "mlruns folder found:"
+            ls -l mlruns
+          else
+            echo "mlruns folder NOT found!"
+            exit 1
+          fi
 
       - name: Commit MLflow artifacts to GitHub
-        if: success()  # Hanya jalankan jika sukses
-        working-directory: './'
-        run: |
-          git add -f Workflow-CI/MLProject/mlruns/
-          if [[ -n $(git status --porcelain) ]]; then
-            git config user.name 'github-actions[bot]'
-            git config user.email 'github-actions[bot]@users.noreply.github.com'
-            git commit -m "Add MLflow artifacts from workflow run"
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-            git push origin main
-          fi
+        if: success()
+        working-directory: './Workflow-CI/MLProject'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -d "mlruns" ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add -f mlruns/
+            if [[ -n $(git status --porcelain) ]]; then
+              git commit -m "Add MLflow artifacts from workflow run"
+              git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+              git push origin main
+            else
+              echo "No changes in mlruns to commit."
+            fi
+          else
+            echo "mlruns folder not found, skipping commit."
+          fi
