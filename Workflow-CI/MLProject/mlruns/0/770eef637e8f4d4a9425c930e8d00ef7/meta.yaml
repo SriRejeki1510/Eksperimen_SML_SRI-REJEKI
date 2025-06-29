@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/LENOVO/Downloads/Eksperimen_SML_SRI-REJEKI/Workflow-CI/MLProject/mlruns/0/770eef637e8f4d4a9425c930e8d00ef7/artifacts
+end_time: 1751221071976
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 770eef637e8f4d4a9425c930e8d00ef7
+run_name: exultant-roo-35
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751221068599
+status: 3
+tags: []
+user_id: runner

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/LENOVO/Downloads/Eksperimen_SML_SRI-REJEKI/Workflow-CI/MLProject/mlruns/576031200571984444/2b73e872956b44f69d8caabec8ca4ce3/artifacts
+end_time: 1751221071758
+entry_point_name: ''
+experiment_id: '576031200571984444'
+lifecycle_stage: active
+run_id: 2b73e872956b44f69d8caabec8ca4ce3
+run_name: beautiful-cow-917
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751221071747
+status: 3
+tags: []
+user_id: runner
