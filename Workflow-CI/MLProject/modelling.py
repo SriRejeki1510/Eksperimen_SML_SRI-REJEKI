@@ -5,15 +5,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
-# HAPUS BARIS INI KARENA INI PENYEBAB UTAMA ERROR:
-# mlflow.set_tracking_uri("http://127.0.0.1:5000")
-
-# Set experiment name. MLflow akan menggunakan MLFLOW_TRACKING_URI dari environment variable.
+# MLflow run dari command line sudah memulai run secara otomatis
+# Jadi, kita tidak perlu mlflow.start_run() di sini
 mlflow.set_experiment("Wine Quality Sri Rejeki")
 
-# Load data hasil preprocessing
-# Pastikan path ini benar relatif terhadap direktori MLProject (yaitu, Workflow-CI/MLProject/)
-df = pd.read_csv("wine_quality_preprocessing/wine_quality_preprocessed.csv")
+# Load data hasil preprocessing (pastikan pakai sep=',')
+df = pd.read_csv("wine_quality_preprocessing/wine_quality_preprocessed.csv", sep=',')
 
 # Cek kolom yang tersedia (debugging)
 print("Kolom-kolom:", df.columns)
@@ -28,12 +25,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Aktifkan autolog MLflow
 mlflow.sklearn.autolog()
 
-# Training model
-with mlflow.start_run():
-    model = RandomForestClassifier(random_state=42)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    print("Akurasi:", acc)
+# Training model (Sekarang ini akan dijalankan dalam run yang sudah dimulai oleh mlflow run .)
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
+print("Akurasi:", acc)
 
-print("MLflow run should now complete successfully!") # Tambahkan ini untuk konfirmasi di log
+# Output ini akan tercetak jika berhasil
+print("MLflow run should now complete successfully!")
