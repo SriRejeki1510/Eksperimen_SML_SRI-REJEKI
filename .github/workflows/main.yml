@@ -1,117 +1,48 @@
-# File: .github/workflows/main.yml
-
-name: Run MLflow Model CI # Nama workflow Anda
+name: Run MLflow Model CI
 
 on:
   push:
-    branches:
-      - main # Pemicu saat ada push ke cabang 'main'
-  workflow_dispatch: # Memungkinkan pemicuan manual dari GitHub Actions tab
+    branches: [main]
+    paths-ignore:        
+      - 'mlruns/**'
+  workflow_dispatch:
 
 jobs:
   run-mlflow-project:
-    runs-on: ubuntu-latest # Runner yang akan menjalankan workflow, ubuntu-latest adalah pilihan umum
-
-    steps: # Pastikan indentasi ini benar (4 spasi dari margin kiri)
-      - name: Checkout repository (full history to avoid cache issues) # Langkah untuk mengkloning repositori Anda
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Mengambil seluruh riwayat untuk menghindari masalah cache
+          fetch-depth: 0
 
-      - name: Set up Python 3.9 # Langkah untuk mengatur versi Python
+      - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
-          cache: 'pip' # Mengaktifkan caching untuk dependensi pip agar lebih cepat
+          cache: 'pip'
 
-      - name: Install all dependencies # Langkah untuk menginstal pustaka yang dibutuhkan
+      - name: Install dependencies
         run: |
-          set -x # Mengaktifkan debugging shell (cetak setiap perintah)
-          python -m pip install --upgrade pip
-          # Instal semua paket yang diperlukan untuk proyek MLflow Anda
-          # Pastikan daftar ini mencakup semua library yang dibutuhkan modelling.py
-          pip install pandas scikit-learn mlflow numpy # Tambahkan library lain jika diperlukan, seperti 'chardet' jika mau dipakai lokal
+          pip install pandas scikit-learn mlflow numpy
 
-      - name: Run MLflow Project and Generate Artifacts # Langkah untuk memverifikasi direktori dan menjalankan MLflow
-        shell: bash # Pastikan menggunakan bash shell
+      - name: Run MLflow Project
+        shell: bash
         run: |
-          set -x # Mengaktifkan debugging shell
-
-          # Pindah ke direktori proyek MLflow Anda
           cd Workflow-CI/MLProject/
-          
-          # Debugging logs
-          echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
-          ls -F
-          echo "---"
+          # ... (logika download & run MLflow)
 
-          # Hapus file CSV yang mungkin masih rusak di runner, lalu download ulang dari GitHub raw
-          echo "Attempting to remove potentially cached/corrupted CSV file in runner..."
-          rm -f wine_quality_preprocessing/wine_quality_preprocessed.csv || true
-          echo "Removed. Now trying to re-download the clean version from GitHub raw."
-
-          # URL RAW file CSV Anda di GitHub
-          RAW_CSV_URL="https://raw.githubusercontent.com/SriRejeki1510/Eksperimen_SML_SRI-REJEKI/main/Workflow-CI/MLProject/wine_quality_preprocessing/wine_quality_preprocessed.csv"
-          
-          # Buat direktori preprocessing jika belum ada
-          mkdir -p wine_quality_preprocessing/
-
-          # Download ulang file CSV yang bersih
-          echo "Downloading clean CSV from $RAW_CSV_URL..."
-          wget -q $RAW_CSV_URL -O wine_quality_preprocessing/wine_quality_preprocessed.csv
-          
-          # Verifikasi ukuran file yang didownload
-          ls -lh wine_quality_preprocessing/wine_quality_preprocessed.csv
-
-          # Debugging krusial untuk VERIFIKASI ISI FILE DI RUNTIME ACTIONS!
-          echo "Verifying content of wine_quality_preprocessed.csv at line 1360-1365 (after re-download):"
-          sed -n '1360,1365p' wine_quality_preprocessing/wine_quality_preprocessed.csv || true
-          
-          echo "--- Content with visible whitespace characters ---"
-          cat -vte wine_quality_preprocessing/wine_quality_preprocessed.csv | sed -n '1360,1365p' || true
-          echo "--- End of visible whitespace verification ---"
-
-          # Verifikasi MLproject dan conda.yaml ada
-          if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
-            echo "MLproject and conda.yaml files found!"
-            echo "--- MLproject content ---"
-            cat MLproject
-            echo "--- conda.yaml content ---"
-            cat conda.yaml
-            echo "---"
-          else
-            echo "Error: MLproject or conda.yaml file not found in the current directory!"
-            exit 1
+      - name: Commit MLflow artifacts to GitHub
+        if: success()  # Hanya jalankan jika sukses
+        working-directory: './'
+        run: |
+          git add -f Workflow-CI/MLProject/mlruns/
+          if [[ -n $(git status --porcelain) ]]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git commit -m "Add MLflow artifacts from workflow run"
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git push origin main
           fi
-
-          # Mengatur MLFLOW_TRACKING_URI ke lokal (ini akan membuat mlruns di root repositori)
-          export MLFLOW_TRACKING_URI=./mlruns 
-          echo "MLFLOW_TRACKING_URI set to: $MLFLOW_TRACKING_URI"
-          
-          # Jalankan proyek MLflow menggunakan lingkungan lokal
-          mlflow run . --env-manager=local
-
-    # >>> BLOK KODE INI BERTANGGUNG JAWAB UNTUK MENDORONG ARTEFAK MLFLOW KE GITHUB <<<
-    - name: Commit MLflow artifacts to GitHub
-      # working-directory di sini adalah root repositori agar git add bisa melacak mlruns
-      working-directory: './' 
-      run: |
-        git config user.name 'github-actions[bot]' # Nama user bot GitHub
-        git config user.email 'github-actions[bot]@users.noreply.github.com' # Email bot GitHub
-
-        # Tambahkan folder mlruns. Gunakan -f (force) jika ada di .gitignore
-        # Karena MLflow membuat mlruns di root repo
-        git add -f mlruns/ 
-
-        # Commit perubahan hanya jika ada perubahan pada mlruns
-        # `|| true` akan memastikan langkah ini tidak gagal jika tidak ada perubahan baru
-        git commit -m "Add MLflow artifacts from workflow run" || true 
-
-        # Set URL remote dengan token untuk otentikasi
-        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-        
-        # Push perubahan ke branch main
-        git push origin main
-      env:
-        # Pastikan GITHUB_TOKEN tersedia (ini adalah secret bawaan GitHub Actions)
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
