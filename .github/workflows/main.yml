@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write  # Berikan izin push ke repo
 
 jobs:
   run-mlflow-project:
@@ -30,7 +30,7 @@ jobs:
       - name: Run MLflow project
         working-directory: ./Workflow-CI/MLProject
         run: |
-          mlflow run . --no-conda
+          mlflow run .
 
       - name: Commit MLflow artifacts to GitHub
         if: success()
