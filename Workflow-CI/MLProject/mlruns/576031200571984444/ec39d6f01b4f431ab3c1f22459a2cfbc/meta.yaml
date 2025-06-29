@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/LENOVO/Downloads/Eksperimen_SML_SRI-REJEKI/Workflow-CI/MLProject/mlruns/576031200571984444/ec39d6f01b4f431ab3c1f22459a2cfbc/artifacts
+end_time: 1751220335564
+entry_point_name: ''
+experiment_id: '576031200571984444'
+lifecycle_stage: active
+run_id: ec39d6f01b4f431ab3c1f22459a2cfbc
+run_name: popular-newt-236
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751220335553
+status: 3
+tags: []
+user_id: runner

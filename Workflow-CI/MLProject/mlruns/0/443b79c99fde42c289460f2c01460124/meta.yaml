@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/LENOVO/Downloads/Eksperimen_SML_SRI-REJEKI/Workflow-CI/MLProject/mlruns/0/443b79c99fde42c289460f2c01460124/artifacts
+end_time: 1751220335774
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 443b79c99fde42c289460f2c01460124
+run_name: charming-snail-130
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751220332543
+status: 3
+tags: []
+user_id: runner
