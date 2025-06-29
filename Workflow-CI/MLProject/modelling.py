@@ -5,11 +5,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
-# Set MLflow Tracking ke lokal
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+# HAPUS BARIS INI KARENA INI PENYEBAB UTAMA ERROR:
+# mlflow.set_tracking_uri("http://127.0.0.1:5000")
+
+# Set experiment name. MLflow akan menggunakan MLFLOW_TRACKING_URI dari environment variable.
 mlflow.set_experiment("Wine Quality Sri Rejeki")
 
 # Load data hasil preprocessing
+# Pastikan path ini benar relatif terhadap direktori MLProject (yaitu, Workflow-CI/MLProject/)
 df = pd.read_csv("wine_quality_preprocessing/wine_quality_preprocessed.csv")
 
 # Cek kolom yang tersedia (debugging)
@@ -32,3 +35,5 @@ with mlflow.start_run():
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     print("Akurasi:", acc)
+
+print("MLflow run should now complete successfully!") # Tambahkan ini untuk konfirmasi di log
