@@ -1,58 +1,66 @@
 # File: .github/workflows/main.yml
 
-name: Run MLflow Model CI
+name: Run MLflow Model CI # Nama workflow Anda
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main # Pemicu saat ada push ke cabang 'main'
+  workflow_dispatch: # Memungkinkan pemicuan manual dari GitHub Actions tab
 
 jobs:
   run-mlflow-project:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Runner yang akan menjalankan workflow, ubuntu-latest adalah pilihan umum
 
-    steps:
-      - name: Checkout repository (full history to avoid cache issues)
+    steps: # Pastikan indentasi ini benar (4 spasi dari margin kiri)
+      - name: Checkout repository (full history to avoid cache issues) # Langkah untuk mengkloning repositori Anda
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Mengambil seluruh riwayat untuk menghindari masalah cache
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.9 # Langkah untuk mengatur versi Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
-          cache: 'pip'
+          cache: 'pip' # Mengaktifkan caching untuk dependensi pip agar lebih cepat
 
-      - name: Install all dependencies
+      - name: Install all dependencies # Langkah untuk menginstal pustaka yang dibutuhkan
         run: |
-          set -x
+          set -x # Mengaktifkan debugging shell (cetak setiap perintah)
           python -m pip install --upgrade pip
-          pip install pandas scikit-learn mlflow numpy # Pastikan semua dependensi yang dibutuhkan modelling.py ada di sini
+          # Instal semua paket yang diperlukan untuk proyek MLflow Anda
+          # Pastikan daftar ini mencakup semua library yang dibutuhkan modelling.py
+          pip install pandas scikit-learn mlflow numpy # Tambahkan library lain jika diperlukan, seperti 'chardet' jika mau dipakai lokal
 
-      - name: Run MLflow Project and Generate Artifacts # Nama langkah diganti agar lebih jelas
-        shell: bash
+      - name: Run MLflow Project and Generate Artifacts # Langkah untuk memverifikasi direktori dan menjalankan MLflow
+        shell: bash # Pastikan menggunakan bash shell
         run: |
-          set -x
+          set -x # Mengaktifkan debugging shell
 
           # Pindah ke direktori proyek MLflow Anda
           cd Workflow-CI/MLProject/
-
+          
+          # Debugging logs
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
           ls -F
           echo "---"
 
+          # Hapus file CSV yang mungkin masih rusak di runner, lalu download ulang dari GitHub raw
           echo "Attempting to remove potentially cached/corrupted CSV file in runner..."
           rm -f wine_quality_preprocessing/wine_quality_preprocessed.csv || true
           echo "Removed. Now trying to re-download the clean version from GitHub raw."
 
+          # URL RAW file CSV Anda di GitHub
           RAW_CSV_URL="https://raw.githubusercontent.com/SriRejeki1510/Eksperimen_SML_SRI-REJEKI/main/Workflow-CI/MLProject/wine_quality_preprocessing/wine_quality_preprocessed.csv"
           
+          # Buat direktori preprocessing jika belum ada
           mkdir -p wine_quality_preprocessing/
 
+          # Download ulang file CSV yang bersih
           echo "Downloading clean CSV from $RAW_CSV_URL..."
           wget -q $RAW_CSV_URL -O wine_quality_preprocessing/wine_quality_preprocessed.csv
           
+          # Verifikasi ukuran file yang didownload
           ls -lh wine_quality_preprocessing/wine_quality_preprocessed.csv
 
           # Debugging krusial untuk VERIFIKASI ISI FILE DI RUNTIME ACTIONS!
@@ -76,17 +84,20 @@ jobs:
             exit 1
           fi
 
-          export MLFLOW_TRACKING_URI=./mlruns # Ini akan membuat mlruns di root repositori
-
+          # Mengatur MLFLOW_TRACKING_URI ke lokal (ini akan membuat mlruns di root repositori)
+          export MLFLOW_TRACKING_URI=./mlruns 
+          echo "MLFLOW_TRACKING_URI set to: $MLFLOW_TRACKING_URI"
+          
+          # Jalankan proyek MLflow menggunakan lingkungan lokal
           mlflow run . --env-manager=local
 
-    # >>> TAMBAHKAN KEMBALI BLOK KODE INI SEBAGAI LANGKAH TERPISAH <<<
+    # >>> BLOK KODE INI BERTANGGUNG JAWAB UNTUK MENDORONG ARTEFAK MLFLOW KE GITHUB <<<
     - name: Commit MLflow artifacts to GitHub
       # working-directory di sini adalah root repositori agar git add bisa melacak mlruns
       working-directory: './' 
       run: |
-        git config user.name 'github-actions[bot]'
-        git config user.email 'github-actions[bot]@users.noreply.github.com'
+        git config user.name 'github-actions[bot]' # Nama user bot GitHub
+        git config user.email 'github-actions[bot]@users.noreply.github.com' # Email bot GitHub
 
         # Tambahkan folder mlruns. Gunakan -f (force) jika ada di .gitignore
         # Karena MLflow membuat mlruns di root repo
@@ -102,4 +113,5 @@ jobs:
         # Push perubahan ke branch main
         git push origin main
       env:
+        # Pastikan GITHUB_TOKEN tersedia (ini adalah secret bawaan GitHub Actions)
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
