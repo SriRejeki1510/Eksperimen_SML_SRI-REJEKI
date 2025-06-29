@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          cache: 'pip' # Biarkan cache pip, ini tidak terkait dengan masalah CSV
+          cache: 'pip'
 
       - name: Install MLflow CLI
         run: |
@@ -52,19 +52,39 @@ jobs:
           # Navigasi ke direktori proyek MLflow Anda
           cd Workflow-CI/MLProject/
 
+          # >>>>>> PERUBAHAN SANGAT KRUSIAL DI SINI <<<<<<
+          # Hapus file CSV yang mungkin masih rusak di runner
+          echo "Attempting to remove potentially cached/corrupted CSV file in runner..."
+          rm -f wine_quality_preprocessing/wine_quality_preprocessed.csv || true
+          echo "Removed. Now trying to re-download the clean version from GitHub raw."
+
+          # Dapatkan URL mentah (raw) dari file CSV di GitHub Anda
+          # Ganti `your-username` dan `your-repo-name` dengan nama Anda dan repositori Anda
+          # Menggunakan `raw.githubusercontent.com` untuk mendapatkan file mentah
+          RAW_CSV_URL="https://raw.githubusercontent.com/SriRejeki1510/Eksperimen_SML_SRI-REJEKI/main/Workflow-CI/MLProject/wine_quality_preprocessing/wine_quality_preprocessed.csv"
+          
+          # Buat direktori jika belum ada (opsional, tapi aman)
+          mkdir -p wine_quality_preprocessing/
+
+          # Download ulang file CSV yang bersih
+          echo "Downloading clean CSV from $RAW_CSV_URL..."
+          wget -q $RAW_CSV_URL -O wine_quality_preprocessing/wine_quality_preprocessed.csv
+          
+          # Verifikasi ukuran file yang didownload
+          ls -lh wine_quality_preprocessing/wine_quality_preprocessed.csv
+
           # Debugging logs
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
           ls -F
           echo "---"
 
-          # Ini adalah langkah debugging krusial untuk VERIFIKASI ISI FILE DI RUNTIME ACTIONS!
-          echo "Verifying content of wine_quality_preprocessed.csv at line 1363:"
-          # Tampilkan baris 1360-1365 dari file CSV
+          # Verifikasi ISI FILE CSV DI RUNTIME ACTIONS - HARUS BERSIH SEKARANG!
+          echo "Verifying content of wine_quality_preprocessed.csv at line 1360-1365 (after re-download):"
           sed -n '1360,1365p' wine_quality_preprocessing/wine_quality_preprocessed.csv || true
           echo "--- End of verification ---"
 
 
-          # Verifikasi MLproject dan conda.yaml ada
+          # Verifikasi MLproject dan conda.yaml ada (seperti sebelumnya)
           if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
             echo "MLproject and conda.yaml files found!"
             echo "--- MLproject content ---"
