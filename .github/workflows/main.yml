@@ -68,10 +68,8 @@ jobs:
             exit 1
           fi
 
-          # Ini adalah tambahan penting! Mengatur MLFLOW_TRACKING_URI ke lokal filesystem.
-          # MLflow akan menyimpan log dan artefak ke folder 'mlruns' di dalam repositori.
-          export MLFLOW_TRACKING_URI=./mlruns
-          echo "MLFLOW_TRACKING_URI set to: $MLFLOW_TRACKING_URI"
+          # BARIS KRITIS YANG HARUS ADA DI SINI SEBELUM mlflow run
+          export MLFLOW_TRACKING_URI=./mlruns # Atau bisa juga file://./mlruns
 
           # Jalankan MLflow project
           mlflow run .
