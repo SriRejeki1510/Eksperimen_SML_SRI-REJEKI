@@ -16,44 +16,59 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Kita tetap set up Python utama di runner untuk menjalankan pip dan mlflow CLI
+      # Tapi lingkungan untuk project MLflow akan dibuat berdasarkan conda.yaml
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           cache: 'pip'
 
-      - name: Install dependencies
+      # Pastikan MLflow CLI terinstal di lingkungan utama
+      - name: Install MLflow CLI
         run: |
           python -m pip install --upgrade pip
-          # Saya sangat menyarankan membuat requirements.txt di Workflow-CI/MLProject/
-          # pip install -r requirements.txt
-          # Atau tetap pakai ini jika belum ada requirements.txt
-          pip install mlflow scikit-learn pandas
+          pip install mlflow
+
+      # Langkah ini akan memastikan Conda ada di runner agar MLflow bisa menggunakannya
+      # Ini penting jika MLflow tidak menginstalnya secara otomatis
+      - name: Install Miniconda if not present
+        run: |
+          # Periksa apakah conda sudah ada
+          if ! command -v conda &> /dev/null
+          then
+              echo "Conda not found, installing Miniconda..."
+              wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+              bash miniconda.sh -b -p $HOME/miniconda
+              rm miniconda.sh
+              echo "PATH=$HOME/miniconda/bin:$PATH" >> $GITHUB_ENV
+              source $HOME/miniconda/bin/activate # Aktifkan base environment untuk perintah conda
+          else
+              echo "Conda is already installed."
+          fi
+          conda update -n base -c defaults conda || true # Update conda, izinkan gagal jika tidak ada update
 
       - name: Verify MLflow Project Directory and Run
         run: |
-          # Perintah ls -F di sini akan menampilkan isi working-directory saat ini
-          # yang sudah kita set ke 'Workflow-CI/MLProject'
           echo "Listing contents of the MLflow Project directory (current working directory): $(pwd)"
           ls -F
           echo "---"
 
-          # Kita tidak perlu lagi mencari 'Workflow-CI/MLProject' karena kita sudah di dalamnya
-          # Hapus atau komentar baris ini:
-          # echo "Listing contents of Workflow-CI/MLProject:"
-          # ls -F Workflow-CI/MLProject
-          # echo "---"
-
-          # Verifikasi apakah file MLproject ada di direktori saat ini
-          # (yaitu Workflow-CI/MLProject/)
-          if [ -f "MLproject" ]; then # Cukup cek "MLproject" saja, bukan "Workflow-CI/MLProject/MLproject"
-            echo "MLproject file found!"
-            cat MLproject # Cukup cat "MLproject" saja
+          # Pastikan MLproject dan conda.yaml ada
+          if [ -f "MLproject" ] && [ -f "conda.yaml" ]; then
+            echo "MLproject and conda.yaml files found!"
+            echo "--- MLproject content ---"
+            cat MLproject
+            echo "--- conda.yaml content ---"
+            cat conda.yaml
+            echo "---"
           else
-            echo "Error: MLproject file not found in the current directory!"
+            echo "Error: MLproject or conda.yaml file not found in the current directory!"
             exit 1
           fi
 
-          mlflow run . --no-conda
+          # JALANKAN MLflow TANPA ARGUMEN --no-conda atau --env-manager
+          # MLflow akan otomatis mendeteksi dan menggunakan conda.yaml Anda
+          mlflow run .
 
         working-directory: Workflow-CI/MLProject # Ini sudah benar
